@@ -264,6 +264,8 @@ if (!defined('sugarEntry') || !sugarEntry) {
                     }
                 }
             }
+            // Raw URL for opening in a new window (avoids DocuSign CSP/eval issues inside nested iframes).
+            $aReturn['sender_view_url'] = $aResp['response'];
             // Show the iframe with docusign UI
             $sIframe = '<iframe id="myIframe" src="'.$aResp['response'].'" width="100%" height="700px" frameborder="0" allowtransparency="true"></iframe>';
             $aReturn['response'] = $sIframe;

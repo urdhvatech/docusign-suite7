@@ -16,52 +16,53 @@ $(document).ready(function () {
     $('#UrdhvaTechDocuSign').on('submit', function(event){
        if($("#sending_type").val() == 'external_file')
        {
-           var receipientExist = false;
-           var isPhoneRequired = false;
-           var receipientPhoneExists = false;
-           $('[id^=receipient_name___]').each(function() {
+            var $form = $(this);
+            var receipientExist = false;
+            var isPhoneRequired = false;
+            var receipientPhoneExists = false;
+            $('[id^=receipient_name___]').each(function() {
                 var receipientNumber = this.id.split('___').pop();
                 if(receipientNumber != "" && typeof(receipientNumber) != "undefined")
                 {
                     if($(this).val().length != 0 && $('#receipient_email___'+receipientNumber).length != 0)
                         receipientExist = true;
                 }
-           });
-           if(!receipientExist)
-           {
+            });
+            if(!receipientExist)
+            {
                 $.unblockUI();
                 alert(SUGAR.language.get("UT_DocuSign", "LBL_SIGNER_MANDATORY_MSG"));
                 return false;
-           }
-           //BEGINS: Added by Urdhva Tech for SMS
-           if($("#sending_option").val() == 'email_sms' || $("#sending_option").val() == 'sms_auth')
-           {
-               isPhoneRequired=true;
-               $('[id^=receipient_phone___]').each(function() {
+            }
+            //BEGINS: Added by Urdhva Tech for SMS
+            if($("#sending_option").val() == 'email_sms' || $("#sending_option").val() == 'sms_auth')
+            {
+                isPhoneRequired=true;
+                $('[id^=receipient_phone___]').each(function() {
                     var receipientNumber = this.id.split('___').pop();
                     if(receipientNumber != "" && typeof(receipientNumber) != "undefined")
                     {
                         if($(this).val().length != 0 && $('#receipient_phone___'+receipientNumber).length != 0)
                             receipientPhoneExists = true;
                     }
-               });
-               if(!receipientPhoneExists)
-               {
+                });
+                if(!receipientPhoneExists)
+                {
                     $.unblockUI();
                     alert(SUGAR.language.get("UT_DocuSign", "LBL_SIGNER_MANDATORY_SMS"));
                     return false;
-               }
-           }
-           //ENDS: Added by Urdhva Tech for SMS
+                }
+            }
+            //ENDS: Added by Urdhva Tech for SMS
            
-           event.preventDefault();
-           event.stopPropagation();
-           showAjaxLoading();
-           // Change the submit action to submitToEmbedSenderView
-           var $input = $(this).find("input[name=action]");
-           $input.val('submitToEmbedSenderView');
-           var formData = new FormData(this);
-           $.ajax({
+            event.preventDefault();
+            event.stopPropagation();
+            showAjaxLoading();
+            // Change the submit action to submitToEmbedSenderView
+            var $input = $(this).find("input[name=action]");
+            $input.val('submitToEmbedSenderView');
+            var formData = new FormData(this);
+            /*$.ajax({
                 url: 'index.php?sugar_body_only=1&to_pdf=1',
                 type: 'POST',
                 //enctype: 'multipart/form-data',
@@ -86,7 +87,47 @@ $(document).ready(function () {
                     $.unblockUI();
                     $(this).attr('action','SendDocumentRS');
                 }
-           });
+            });*/
+            $.ajax({
+                url: 'index.php?sugar_body_only=1&to_pdf=1',
+                type: 'POST',
+                //enctype: 'multipart/form-data',
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    $.unblockUI();
+                    var response;
+                    try {
+                        response = JSON.parse(data);
+                    } catch (e) {
+                        $('#senderViewIframeModal .modal-body').html(SUGAR.language.get("UT_DocuSign", "LBL_ERRMSG_4"));
+                        $('#senderViewIframeModal').modal({show:true});
+                        $form.attr('action','SendDocumentRS');
+                        return;
+                    }
+                    if (response.error && response.error !== '') {
+                        $('#senderViewIframeModal .modal-body').html(response.error);
+                        $('#senderViewIframeModal').modal({show:true});
+                        $form.attr('action','SendDocumentRS');
+                        return;
+                    }
+                    var senderUrl = (response.sender_view_url && response.sender_view_url !== '')
+                        ? response.sender_view_url
+                        : response.response;
+                    if (senderUrl && senderUrl !== '') {
+                        alert("senderUrl: " + senderUrl);
+                        window.parent.location.href = senderUrl;
+                        return;
+                    }
+                    $form.attr('action','SendDocumentRS');
+                },
+                error: function (e) {
+                    $.unblockUI();
+                    $form.attr('action','SendDocumentRS');
+                }
+            });
        }
        else{
            // Submit the form
