@@ -80,7 +80,7 @@
 
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn-primary btn " data-dismiss="modal">{$APP.LBL_CLOSE_BUTTON_TITLE}</button>
+              <button type="button" class="btn-primary btn " data-dismiss="modal">{$app.LBL_CLOSE_BUTTON_TITLE}</button>
             </div>
           </div>
 
